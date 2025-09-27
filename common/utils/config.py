@@ -86,16 +86,24 @@ def validate_and_normalize(cfg: Dict[str, Any]) -> Dict[str, Any]:
         normalized.append(nf)
     cfg["federates"] = normalized
 
-    # basic task_params sanity for classification
     if cfg.get("task") == "classification":
         tp = _ensure(cfg, "task_params", {})
-        if "num_classes" not in tp or "input_size" not in tp:
-            # don't force values — warn by raising is invasive; choose to set minimal defaults
-            tp.setdefault("num_classes", 1000)
-            tp.setdefault("input_size", 224)
+        inferred: dict = {}
+        if "num_classes" not in tp:
+            inferred["num_classes"] = 1000
+            tp.setdefault("num_classes", inferred["num_classes"])
+        if "input_size" not in tp:
+            inferred["input_size"] = 224
+            tp.setdefault("input_size", inferred["input_size"])
+        if inferred:
+            # minimal, obvious warning for the user + record for reproducibility
+            print(
+                f"Warning: config missing task_params; inferred defaults: {inferred}. "
+                "For reproducibility, set these explicitly in the config.",
+                file=sys.stderr,
+            )
+            cfg["_inferred_defaults"] = inferred
         cfg["task_params"] = tp
-
-    return cfg
 
 def load_config(path: str | Path) -> Dict[str, Any]:
     p = Path(path)
