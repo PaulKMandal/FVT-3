@@ -34,7 +34,8 @@ def main():
 
     orch_cmd = [
         sys.executable,
-        "orchestrator/main.py",
+        "-m",
+        "orchistrator.main"
         "--config", str(config_path),
         "--host", args.orch_host,
         "--port", str(args.orch_port),
@@ -60,7 +61,8 @@ def main():
 
         server_cmd = [
             sys.executable,
-            "server/main.py",
+            "-m",
+            "server.main",
             "--id", str(fid),
             "--config", str(config_path),
             "--host", str(host),
