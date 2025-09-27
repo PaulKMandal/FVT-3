@@ -15,6 +15,12 @@ def parse_args():
     return p.parse_args()
 
 
+def _parse_address(addr: str):
+    if ":" not in addr:
+        raise ValueError("address must be host:port")
+    host, port = addr.rsplit(":", 1)
+    return host, int(port)
+
 def main():
     args = parse_args()
     config_path = Path(args.config)
@@ -37,6 +43,8 @@ def main():
     print("Starting orchestrator:", " ".join(orch_cmd))
     orch_proc = subprocess.Popen(orch_cmd)
     procs.append(("orchestrator", orch_proc))
+
+    time.sleep(0.5)
 
 if __name__ == "__main__":
     main()
