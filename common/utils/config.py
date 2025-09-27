@@ -104,6 +104,8 @@ def validate_and_normalize(cfg: Dict[str, Any]) -> Dict[str, Any]:
             )
             cfg["_inferred_defaults"] = inferred
         cfg["task_params"] = tp
+    
+    return cfg
 
 def load_config(path: str | Path) -> Dict[str, Any]:
     p = Path(path)
