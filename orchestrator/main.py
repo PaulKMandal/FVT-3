@@ -50,7 +50,7 @@ def parse_args():
 def call_init_on_federate(address: str, config_id: str, config_yaml: str):
     # address expected as host:port
     channel = grpc.insecure_channel(address)
-    stub = fvt3_pb2_grpc.ServerServiceStub(channel)
+    stub = fvt3_pb2_grpc.ServerStub(channel)
     req = fvt3_pb2.InitRequest(config_id=config_id, config_yaml=config_yaml,
                                timestamp_utc=int(time.time()))
     try:
