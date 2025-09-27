@@ -46,5 +46,51 @@ def main():
 
     time.sleep(0.5)
 
+    for f in federates:
+        fid = f.get("id")
+        addr = f.get("address")
+        if not fid or not addr:
+            print(f"skipping federate with missing id/address: {f}")
+            continue
+        try:
+            host, port = _parse_address(addr)
+        except Exception as e:
+            print(f"invalid address for federate {fid}: {addr} — skipping ({e})")
+            continue
+
+        server_cmd = [
+            sys.executable,
+            "server/main.py",
+            "--id", str(fid),
+            "--config", str(config_path),
+            "--host", str(host),
+            "--port", str(port),
+        ]
+        print(f"Starting server {fid}:", " ".join(server_cmd))
+        p = subprocess.Popen(server_cmd)
+        procs.append((f"server:{fid}", p))
+
+    try:
+        # keep running until interrupted
+        while True:
+            time.sleep(1.0)
+    except KeyboardInterrupt:
+        print("\nCaught Ctrl-C — terminating child processes...")
+
+    # terminate children
+    for name, p in procs:
+        if p.poll() is None:
+            print(f"terminating {name} (pid={p.pid})")
+            p.terminate()
+    # give them a moment, then kill if necessary
+    time.sleep(1.0)
+    for name, p in procs:
+        if p.poll() is None:
+            print(f"killing {name} (pid={p.pid})")
+            p.kill()
+
+    print("All child processes stopped.")
+    return 0
+
 if __name__ == "__main__":
     main()
