@@ -64,7 +64,6 @@ def main():
             "-m",
             "server.main",
             "--id", str(fid),
-            "--config", str(config_path),
             "--host", str(host),
             "--port", str(port),
         ]
