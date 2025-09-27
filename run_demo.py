@@ -26,14 +26,14 @@ def main():
 
     procs = []
 
-        orch_cmd = [
+    orch_cmd = [
         sys.executable,
         "orchestrator/main.py",
         "--manifest", str(manifest_path),
         "--host", args.orch_host,
         "--port", str(args.orch_port),
     ]
-    
+
     print("Starting orchestrator:", " ".join(orch_cmd))
     orch_proc = subprocess.Popen(orch_cmd)
     procs.append(("orchestrator", orch_proc))
