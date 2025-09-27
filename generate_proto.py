@@ -12,7 +12,7 @@ def main():
         print(f"proto dir not found: {PROTO_DIR}", file=sys.stderr)
         return 2
 
-    # generate stubs (run protoc from common/proto so we pass only the basename)
+    # Run protoc ge
     cmd = [
         sys.executable,
         "-m",
