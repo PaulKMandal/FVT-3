@@ -33,7 +33,7 @@ class OrchestratorServicer(fvt3_pb2_grpc.OrchestratorServicer):
 
 def serve_orchestrator(host: str, port: int):
     server = grpc.server(ThreadPoolExecutor(max_workers=8))
-    fvt3_pb2_grpc.add_OrchestratorServiceServicer_to_server(OrchestratorServicer(), server)
+    fvt3_pb2_grpc.add_OrchestratorServicer_to_server(OrchestratorServicer(), server)
     addr = f"{host}:{port}"
     server.add_insecure_port(addr)
     server.start()
