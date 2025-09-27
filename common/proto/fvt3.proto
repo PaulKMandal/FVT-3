@@ -3,11 +3,39 @@ package fvt3;
 
 option go_package = "fvt3pb";
 
+enum Method {
+  METHOD_UNSPECIFIED = 0; // future-proof: HFL/VFL/FTL/SPLIT/BRIDGE later
+  HFL = 1;
+}
+
+message TrainSpec {
+  int32 local_epochs = 1;
+  float learning_rate = 2;
+  int32 batch_size = 3;
+}
+
+message Privacy {
+  bool dp_enabled = 1;
+  double target_epsilon = 2;
+  float clip_norm = 3;
+  float noise_multiplier = 4;
+  bool secure_agg_enabled = 5; // placeholder
+}
+
 // Simple config payload (YAML string). Orchestrator -> Server
 message InitRequest {
-  string config_id = 1;        // short id for this run
+  string config_id = 1;        // run id
   string config_yaml = 2;      // full YAML manifest as string
   int64 timestamp_utc = 3;     // unix seconds
+  Method method = 4;         // default HFL
+  Privacy privacy = 5;       // optional; can be empty
+}
+
+message StartRoundRequest {
+  string config_id = 1;
+  int32 round_id = 2;
+  string global_ref = 3;     // path/uri to base or adapter for this round
+  TrainSpec train_spec = 4;  // per-round local knobs
 }
 
 message Ack {
@@ -20,9 +48,9 @@ message Ack {
 // Server -> Orchestrator registration
 message RegisterRequest {
   string id = 1;
-  int64 reported_n_samples = 2;
-  string device = 3;
-  string data_path = 4;
+  int64 reported_n_samples = 2; // used for weighting/selection
+  string device = 3;            // e.g., "cuda:0" or "cpu"
+  string data_path = 4;         // optional informational
   int64 timestamp_utc = 5;
 }
 
@@ -34,7 +62,7 @@ message RegisterResponse {
 // Upload chunks (client-streaming). Supports checksums and sequence numbers.
 message UploadChunk {
   string id = 1;               // server id
-  string artifact_id = 2;      // e.g., "lora_round_1" or "model_ckpt"
+  string artifact_id = 2;      // e.g., "lora_r1_client01" | "full_ckpt_r1"
   int64 seq = 3;               // 0-based chunk sequence
   bytes data = 4;              // payload bytes
   bool final_chunk = 5;        // true if last chunk
@@ -53,6 +81,7 @@ message UploadResponse {
 
 service Server {
   rpc Init(InitRequest) returns (Ack);
+  rpc StartRound(StartRoundRequest) returns (Ack);
 }
 
 service Orchestrator {
