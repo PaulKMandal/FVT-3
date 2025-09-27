@@ -1,0 +1,44 @@
+version: "0.1"
+name: cifar10_vit_lora
+task: classification
+task_params:
+  num_classes: 10
+  input_size: 224
+
+model:
+  name: google/vit-base-patch16-224
+  finetune_mode: lora
+  peft:
+    enabled: true
+    r: 64
+    alpha: 64
+    target_modules: [query, value]
+
+dataset:
+  name: cifar10
+  path: ""
+
+federation:
+  mode: autonomous
+  rounds: 3
+  client_selection: [round_robin, 1.0]
+  aggregation: average
+  communication:
+    send: lora
+
+federates:
+  - id: client-01
+    address: "0.0.0.0:9001"
+  - id: client-02
+    address: "0.0.0.0:9002"
+
+hyperparams:
+  learning_rate: 1e-4
+  weight_decay: 0.0
+  batch_size: 32
+  local_epochs: 1
+  optimizer: AdamW
+
+evaluation:
+  eval_every_round: 1
+  metrics: [accuracy, loss]

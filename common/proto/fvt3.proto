@@ -1,0 +1,90 @@
+syntax = "proto3";
+package fvt3;
+
+option go_package = "fvt3pb";
+
+enum Method {
+  METHOD_UNSPECIFIED = 0; // future-proof: HFL/VFL/FTL/SPLIT/BRIDGE later
+  HFL = 1;
+}
+
+message TrainSpec {
+  int32 local_epochs = 1;
+  float learning_rate = 2;
+  int32 batch_size = 3;
+}
+
+message Privacy {
+  bool dp_enabled = 1;
+  double target_epsilon = 2;
+  float clip_norm = 3;
+  float noise_multiplier = 4;
+  bool secure_agg_enabled = 5; // placeholder
+}
+
+// Simple config payload (YAML string). Orchestrator -> Server
+message InitRequest {
+  string config_id = 1;        // run id
+  string config_yaml = 2;      // full YAML manifest as string
+  int64 timestamp_utc = 3;     // unix seconds
+  Method method = 4;         // default HFL
+  Privacy privacy = 5;       // optional; can be empty
+}
+
+message StartRoundRequest {
+  string config_id = 1;
+  int32 round_id = 2;
+  string global_ref = 3;     // path/uri to base or adapter for this round
+  TrainSpec train_spec = 4;  // per-round local knobs
+}
+
+message Ack {
+  string id = 1;               // Server id (if known) or empty
+  int64 received_timestamp = 2;
+  string status = 3;           // "ok" or "error"
+  string note = 4;             // optional human-readable note
+}
+
+// Server -> Orchestrator registration
+message RegisterRequest {
+  string id = 1;
+  int64 reported_n_samples = 2; // used for weighting/selection
+  string device = 3;            // e.g., "cuda:0" or "cpu"
+  string data_path = 4;         // optional informational
+  int64 timestamp_utc = 5;
+}
+
+message RegisterResponse {
+  string status = 1;
+  string note = 2;
+}
+
+// Upload chunks (client-streaming). Supports checksums and sequence numbers.
+message UploadChunk {
+  string id = 1;               // server id
+  string artifact_id = 2;      // e.g., "lora_r1_client01" | "full_ckpt_r1"
+  int64 seq = 3;               // 0-based chunk sequence
+  bytes data = 4;              // payload bytes
+  bool final_chunk = 5;        // true if last chunk
+  string chunk_sha256 = 6;     // optional chunk checksum (hex)
+}
+
+message UploadResponse {
+  string status = 1;
+  string artifact_ref = 2;     // server-side ref/path
+  string note = 3;
+}
+
+// Services:
+// - ServerService: implemented by each federate server; orchestrator calls Init on it.
+// - OrchestratorService: implemented by orchestrator; servers call Register and UploadModel.
+
+service Server {
+  rpc Init(InitRequest) returns (Ack);
+  rpc StartRound(StartRoundRequest) returns (Ack);
+}
+
+service Orchestrator {
+  rpc Register(RegisterRequest) returns (RegisterResponse);
+  rpc UploadModel(stream UploadChunk) returns (UploadResponse);
+}
