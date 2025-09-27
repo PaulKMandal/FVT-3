@@ -37,3 +37,6 @@ def main():
     print("Starting orchestrator:", " ".join(orch_cmd))
     orch_proc = subprocess.Popen(orch_cmd)
     procs.append(("orchestrator", orch_proc))
+
+if __name__ == "__main__":
+    main()
