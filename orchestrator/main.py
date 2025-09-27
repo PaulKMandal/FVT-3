@@ -75,6 +75,22 @@ def main():
 
     # call Init on each federate listed
     federates = cfg.get("federates", [])
+    for f in federates:
+        addr = f.get("address")
+        fid = f.get("id", "<no-id>")
+        if not addr:
+            print(f"Skipping federate {fid}: no address", flush=True)
+            continue
+        print(f"Calling Init on federate {fid} @ {addr}", flush=True)
+        call_init_on_federate(addr, config_id, config_yaml)
+
+    try:
+        # keep the orchestrator running to accept Register/UploadModel RPCs from federates
+        while True:
+            time.sleep(1.0)
+    except KeyboardInterrupt:
+        print("\nShutting down orchestrator...", flush=True)
+        server.stop(0)
 
 if __name__ == "__main__":
     main()
