@@ -52,5 +52,15 @@ def main():
     cfg_path = Path(args.config)
     cfg = yaml.safe_load(cfg_path.read_text())
 
+    # start orchestrator server
+    server = serve_orchestrator(args.host, args.port)
+
+    # prepare config payload (use config name or filename as id)
+    config_id = cfg.get("name") or cfg_path.stem
+    config_yaml = cfg_path.read_text()
+
+    # call Init on each federate listed
+    federates = cfg.get("federates", [])
+
 if __name__ == "__main__":
     main()
