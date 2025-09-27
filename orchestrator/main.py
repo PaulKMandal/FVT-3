@@ -9,6 +9,28 @@ import grpc
 from datetime import datetime, timezone
 from common.proto import fvt3_pb2, fvt3_pb2_grpc
 
+class OrchestratorServicer(fvt3_pb2_grpc.OrchestratorServicer):
+    def Register(self, request: fvt3_pb2.RegisterRequest, context) -> fvt3_pb2.RegisterResponse:
+        ts = datetime.now(timezone.utc).isoformat()
+        print(f"\n=== Register received at {ts} ===", flush=True)
+        print(f"id: {request.id}")
+        print(f"reported_n_samples: {request.reported_n_samples}")
+        print(f"device: {request.device}")
+        print(f"data_path: {request.data_path}")
+        print("==============================\n", flush=True)
+        return fvt3_pb2.RegisterResponse(status="ok", note="registered")
+
+    def UploadModel(self, request_iterator, context) -> fvt3_pb2.UploadResponse:
+        cnt = 0
+        last_artifact = ""
+        for chunk in request_iterator:
+            cnt += 1
+            last_artifact = chunk.artifact_id
+        note = f"received {cnt} chunks for {last_artifact}"
+        print(f"UploadModel done: {note}", flush=True)
+        return fvt3_pb2.UploadResponse(status="ok", artifact_ref=last_artifact, note=note)
+
+
 def parse_args():
     p = argparse.ArgumentParser(description="Orchestrator (server + client to federates)")
     p.add_argument("--config", "-c", required=True, help="Path to YAML config")
