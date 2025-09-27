@@ -31,6 +31,15 @@ class OrchestratorServicer(fvt3_pb2_grpc.OrchestratorServicer):
         return fvt3_pb2.UploadResponse(status="ok", artifact_ref=last_artifact, note=note)
 
 
+def serve_orchestrator(host: str, port: int):
+    server = grpc.server(ThreadPoolExecutor(max_workers=8))
+    fvt3_pb2_grpc.add_OrchestratorServiceServicer_to_server(OrchestratorServicer(), server)
+    addr = f"{host}:{port}"
+    server.add_insecure_port(addr)
+    server.start()
+    print(f"Orchestrator gRPC server listening on {addr}", flush=True)
+    return server
+
 def parse_args():
     p = argparse.ArgumentParser(description="Orchestrator (server + client to federates)")
     p.add_argument("--config", "-c", required=True, help="Path to YAML config")
