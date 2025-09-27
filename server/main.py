@@ -34,8 +34,26 @@ def parse_args():
     p.add_argument("--port", type=int, default=9001, help="Port to bind the gRPC server")
     return p.parse_args()
 
+def serve(host: str, port: int, server_id: str):
+    server = grpc.server(ThreadPoolExecutor(max_workers=4))
+    servicer = ServerServicer(server_id)
+    fvt3_pb2_grpc.add_ServerServiceServicer_to_server(servicer, server)
+    listen_addr = f"{host}:{port}"
+    server.add_insecure_port(listen_addr)
+    print(f"Starting gRPC server (id={server_id}) on {listen_addr} ...", flush=True)
+    server.start()
+
+    try:
+        while True:
+            time.sleep(60)
+
+    except KeyboardInterrupt:
+        print("Shutting down gRPC server...", flush=True)
+        server.stop(0)
+
 def main():
     args = parse_args()
+    serve(args.host, args.port, args.id)
 
 if __name__ == "__main__":
     main()
