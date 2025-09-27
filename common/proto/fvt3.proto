@@ -1,0 +1,61 @@
+syntax = "proto3";
+package fvt3;
+
+option go_package = "fvt3pb";
+
+// Simple config payload (YAML string). Orchestrator -> Agent
+message InitRequest {
+  string config_id = 1;        // short id for this run
+  string config_yaml = 2;      // full YAML manifest as string
+  int64 timestamp_utc = 3;     // unix seconds
+}
+
+message Ack {
+  string id = 1;               // agent id (if known) or empty
+  int64 received_timestamp = 2;
+  string status = 3;           // "ok" or "error"
+  string note = 4;             // optional human-readable note
+}
+
+// Agent -> Orchestrator registration
+message RegisterRequest {
+  string id = 1;
+  int64 reported_n_samples = 2;
+  string device = 3;
+  string data_path = 4;
+  int64 timestamp_utc = 5;
+}
+
+message RegisterResponse {
+  string status = 1;
+  string note = 2;
+}
+
+// Upload chunks (client-streaming). Supports checksums and sequence numbers.
+message UploadChunk {
+  string id = 1;               // agent id
+  string artifact_id = 2;      // e.g., "lora_round_1" or "model_ckpt"
+  int64 seq = 3;               // 0-based chunk sequence
+  bytes data = 4;              // payload bytes
+  bool final_chunk = 5;        // true if last chunk
+  string chunk_sha256 = 6;     // optional chunk checksum (hex)
+}
+
+message UploadResponse {
+  string status = 1;
+  string artifact_ref = 2;     // server-side ref/path
+  string note = 3;
+}
+
+// Services:
+// - AgentService: implemented by each agent; orchestrator calls Init on it.
+// - OrchestratorService: implemented by orchestrator; agents call Register and UploadModel.
+
+service AgentService {
+  rpc Init(InitRequest) returns (Ack);
+}
+
+service OrchestratorService {
+  rpc Register(RegisterRequest) returns (RegisterResponse);
+  rpc UploadModel(stream UploadChunk) returns (UploadResponse);
+}
