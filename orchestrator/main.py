@@ -47,6 +47,20 @@ def parse_args():
     p.add_argument("--port", type=int, default=9000, help="Port to bind orchestrator gRPC server")
     return p.parse_args()
 
+def call_init_on_federate(address: str, config_id: str, config_yaml: str):
+    # address expected as host:port
+    channel = grpc.insecure_channel(address)
+    stub = fvt3_pb2_grpc.ServerServiceStub(channel)
+    req = fvt3_pb2.InitRequest(config_id=config_id, config_yaml=config_yaml,
+                               timestamp_utc=int(time.time()))
+    try:
+        resp = stub.Init(req, timeout=10.0)
+    except Exception as e:
+        print(f"Init RPC to {address} failed: {e}", flush=True)
+        return None
+    print(f"Init ACK from {address}: id={resp.id} status={resp.status} received_ts={resp.received_timestamp}", flush=True)
+    return resp
+
 def main():
     args = parse_args()
     cfg_path = Path(args.config)
