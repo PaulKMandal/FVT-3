@@ -51,11 +51,11 @@ message UploadResponse {
 // - ServerService: implemented by each federate server; orchestrator calls Init on it.
 // - OrchestratorService: implemented by orchestrator; servers call Register and UploadModel.
 
-service ServerService {
+service Server {
   rpc Init(InitRequest) returns (Ack);
 }
 
-service OrchestratorService {
+service Orchestrator {
   rpc Register(RegisterRequest) returns (RegisterResponse);
   rpc UploadModel(stream UploadChunk) returns (UploadResponse);
 }

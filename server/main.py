@@ -6,7 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 import grpc
 from common.proto import fvt3_pb2, fvt3_pb2_grpc
 
-class ServerServicer(fvt3_pb2_grpc.ServerServiceServicer):
+class ServerServicer(fvt3_pb2_grpc.ServerServicer):
     def __init__(self, server_id: str):
         self.server_id = server_id
 
@@ -37,7 +37,7 @@ def parse_args():
 def serve(host: str, port: int, server_id: str):
     server = grpc.server(ThreadPoolExecutor(max_workers=4))
     servicer = ServerServicer(server_id)
-    fvt3_pb2_grpc.add_ServerServiceServicer_to_server(servicer, server)
+    fvt3_pb2_grpc.add_ServerServicer_to_server(servicer, server)
     listen_addr = f"{host}:{port}"
     server.add_insecure_port(listen_addr)
     print(f"Starting gRPC server (id={server_id}) on {listen_addr} ...", flush=True)
