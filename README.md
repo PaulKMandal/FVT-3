@@ -1,4 +1,4 @@
 # FVT-3
 Based off of foundational research done in FATE-LLM but expanded to more models.
 
-You must run ```python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. common/proto/fvt3.proto``` to set up gRPC.
+You must run generate_proto.py. You cannot run protoc directly because it assumes that the generated files will be in the root directory and will not work with relative imports.
