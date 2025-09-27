@@ -3,7 +3,7 @@ package fvt3;
 
 option go_package = "fvt3pb";
 
-// Simple config payload (YAML string). Orchestrator -> Agent
+// Simple config payload (YAML string). Orchestrator -> Server
 message InitRequest {
   string config_id = 1;        // short id for this run
   string config_yaml = 2;      // full YAML manifest as string
@@ -11,13 +11,13 @@ message InitRequest {
 }
 
 message Ack {
-  string id = 1;               // agent id (if known) or empty
+  string id = 1;               // Server id (if known) or empty
   int64 received_timestamp = 2;
   string status = 3;           // "ok" or "error"
   string note = 4;             // optional human-readable note
 }
 
-// Agent -> Orchestrator registration
+// Server -> Orchestrator registration
 message RegisterRequest {
   string id = 1;
   int64 reported_n_samples = 2;
@@ -33,7 +33,7 @@ message RegisterResponse {
 
 // Upload chunks (client-streaming). Supports checksums and sequence numbers.
 message UploadChunk {
-  string id = 1;               // agent id
+  string id = 1;               // server id
   string artifact_id = 2;      // e.g., "lora_round_1" or "model_ckpt"
   int64 seq = 3;               // 0-based chunk sequence
   bytes data = 4;              // payload bytes
@@ -48,10 +48,10 @@ message UploadResponse {
 }
 
 // Services:
-// - AgentService: implemented by each agent; orchestrator calls Init on it.
-// - OrchestratorService: implemented by orchestrator; agents call Register and UploadModel.
+// - ServerService: implemented by each federate server; orchestrator calls Init on it.
+// - OrchestratorService: implemented by orchestrator; servers call Register and UploadModel.
 
-service AgentService {
+service ServerService {
   rpc Init(InitRequest) returns (Ack);
 }
 
