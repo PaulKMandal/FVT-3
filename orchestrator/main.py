@@ -47,19 +47,28 @@ def parse_args():
     p.add_argument("--port", type=int, default=9000, help="Port to bind orchestrator gRPC server")
     return p.parse_args()
 
-def call_init_on_federate(address: str, config_id: str, config_yaml: str):
+def call_init_on_federate(address: str, config_id: str, config_yaml: str, retries: int = 5, base_delay: float = 1):
     # address expected as host:port
-    channel = grpc.insecure_channel(address)
-    stub = fvt3_pb2_grpc.ServerStub(channel)
-    req = fvt3_pb2.InitRequest(config_id=config_id, config_yaml=config_yaml,
-                               timestamp_utc=int(time.time()))
-    try:
-        resp = stub.Init(req, timeout=10.0)
-    except Exception as e:
-        print(f"Init RPC to {address} failed: {e}", flush=True)
-        return None
-    print(f"Init ACK from {address}: id={resp.id} status={resp.status} received_ts={resp.received_timestamp}", flush=True)
-    return resp
+    for attempt in range(1, retries + 1):
+        channel = grpc.insecure_channel(address)
+        stub = fvt3_pb2_grpc.ServerStub(channel)
+        req = fvt3_pb2.InitRequest(config_id=config_id, config_yaml=config_yaml,
+                                   timestamp_utc=int(time.time()))
+        try:
+            resp = stub.Init(req, timeout=5.0)
+            print(f"Init ACK from {address}: id={resp.id} status={resp.status} received_ts={resp.received_timestamp}", flush=True)
+            return resp
+
+        except Exception as e:
+            print(f"Init RPC to {address} failed (attempt {attempt}/{retries}): {e}", flush=True)
+            if attempt == retries:
+                print(f"Giving up on {address} after {retries} attempts.", flush=True)
+                return None
+
+            # exponential backoff
+            delay = base_delay * (2 ** (attempt - 1))
+            time.sleep(delay)
+    return None
 
 def main():
     args = parse_args()
