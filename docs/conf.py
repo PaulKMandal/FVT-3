@@ -3,6 +3,17 @@ from datetime import datetime
 # Make package importable for autodoc:
 sys.path.insert(0, os.path.abspath('..'))
 
+autodoc_default_options = {
+    "members": True,
+    "inherited-members": True,
+    "exclude-members": "__init__",
+    "show-inheritance": True,
+}
+
+autoclass_content = "both" 
+autodoc_inherit_docstrings = True   # default is True; make it explicit
+autoclass_content = "both"   
+
 project = "Your Project"
 author = "Your Name"
 copyright = f"{datetime.now():%Y}, {author}"
