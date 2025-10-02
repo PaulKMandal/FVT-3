@@ -1,9 +1,19 @@
 API Reference
 =============
 
-.. toctree::
-   :maxdepth: 2
+.. autosummary::
+   :toctree: generated
+   :recursive:
 
-   common
-   orchestrator
-   server
+   api/index
+
+   orchestrator.main
+   server.main
+
+..
+    .. toctree::
+        :maxdepth: 2
+
+        common
+        orchestrator
+        server
